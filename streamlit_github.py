@@ -7,8 +7,15 @@ import os
 from assemble_github import run_all, clean_sheet_name  # 사용자 정의 함수
 
 # ✅ 한글 폰트 설정 (Windows 기준)
-plt.rcParams['font.family'] = 'Malgun Gothic'
-plt.rcParams['axes.unicode_minus'] = False
+# 시스템 한글 폰트 자동 적용
+font_paths = fm.findSystemFonts(fontpaths=["/usr/share/fonts", "/usr/local/share/fonts"])
+han_fonts = [f for f in font_paths if 'Nanum' in f or 'Un' in f]
+
+if han_fonts:
+    font_path = han_fonts[0]
+    font_name = fm.FontProperties(fname=font_path).get_name()
+    plt.rcParams['font.family'] = font_name
+    plt.rcParams['axes.unicode_minus'] = False
 
 # 📌 스트림릿 기본 설정
 st.set_page_config(page_title="경제지표 시각화 대시보드", layout="wide")
