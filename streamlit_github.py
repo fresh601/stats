@@ -8,7 +8,7 @@ import urllib.request
 from assemble_github import run_all, clean_sheet_name  # 사용자 정의 함수
 
 # ✅ 한글 폰트 설정 (Cloud 환경 대비)
-ONT_URL = "https://raw.githubusercontent.com/frresh601/stats/main/NanumGothic.otf"  # ✅ 여기에 실제 raw URL
+FONT_URL = "https://raw.githubusercontent.com/frresh601/stats/main/NanumGothic.otf"  # ✅ 여기에 실제 raw URL
 FONT_PATH = "/tmp/NanumGothic.otf"
 
 # 폰트 다운로드 (Streamlit Cloud 실행 시마다)
