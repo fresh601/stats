@@ -7,16 +7,9 @@ import os
 from assemble_github import run_all, clean_sheet_name  # 사용자 정의 함수
 
 # ✅ 한글 폰트 설정 (Cloud 환경 대비)
-FONT_URL = "https://github.com/team-report/fonts/raw/main/NanumGothic.ttf"
-FONT_PATH = "/tmp/NanumGothic.ttf"
-
-if not os.path.exists(FONT_PATH):
-    import urllib.request
-    urllib.request.urlretrieve(FONT_URL, FONT_PATH)
-
-font_name = fm.FontProperties(fname=FONT_PATH).get_name()
-plt.rcParams["font.family"] = font_name
-plt.rcParams["axes.unicode_minus"] = False
+font_path = "NanumGothic.otf"  # GitHub root에 업로드했으므로 상대 경로 그대로 사용
+fontprop = fm.FontProperties(fname=font_path)
+plt.rcParams['font.family'] = fontprop.get_name()
 
 # 📌 스트림릿 기본 설정
 st.set_page_config(page_title="경제지표 시각화 대시보드", layout="wide")
