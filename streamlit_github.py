@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.font_manager as fm
 import os
+import urllib.request
 from assemble_github import run_all, clean_sheet_name  # 사용자 정의 함수
 
 # ✅ 한글 폰트 설정 (Cloud 환경 대비)
