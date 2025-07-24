@@ -7,9 +7,19 @@ import os
 from assemble_github import run_all, clean_sheet_name  # 사용자 정의 함수
 
 # ✅ 한글 폰트 설정 (Cloud 환경 대비)
-font_path = "NanumGothic.otf"  # GitHub root에 업로드했으므로 상대 경로 그대로 사용
-fontprop = fm.FontProperties(fname=font_path)
-plt.rcParams['font.family'] = fontprop.get_name()
+ONT_URL = "https://raw.githubusercontent.com/frresh601/stats/main/NanumGothic.otf"  # ✅ 여기에 실제 raw URL
+FONT_PATH = "/tmp/NanumGothic.otf"
+
+# 폰트 다운로드 (Streamlit Cloud 실행 시마다)
+if not os.path.exists(FONT_PATH):
+    urllib.request.urlretrieve(FONT_URL, FONT_PATH)
+
+# matplotlib에 한글 폰트 등록
+font_name = fm.FontProperties(fname=FONT_PATH).get_name()
+plt.rcParams["font.family"] = font_name
+plt.rcParams["axes.unicode_minus"] = False
+
+
 
 # 📌 스트림릿 기본 설정
 st.set_page_config(page_title="경제지표 시각화 대시보드", layout="wide")
