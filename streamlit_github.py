@@ -24,16 +24,25 @@ st.title("📊 통합 경제지표 시각화 대시보드")
 # 🔄 데이터 로딩
 DATA_FILE = "통합_주요지표_최종.xlsx"
 
-st.markdown("### 📂 데이터 파일 확인 및 재수집")
+# ✅ 상태 변수 초기화
+if "refresh_triggered" not in st.session_state:
+    st.session_state.refresh_triggered = False
 
-# 🌀 수동으로 데이터 수집 버튼
-if st.button("🌀 최신 통계 데이터 새로 불러오기"):
+# ✅ 사용자 수동 수집 버튼
+st.markdown("### 📂 통계 데이터 최신화")
+
+if st.button("🌀 최신 통계 데이터 새로 수집"):
     if os.path.exists(DATA_FILE):
         os.remove(DATA_FILE)
     run_all()
-    st.experimental_rerun()  # 앱 강제 새로고침
+    st.session_state.refresh_triggered = True
+    st.experimental_rerun()  # ✅ 버튼 내부에서만 호출해야 함
 
-# 📥 엑셀 파일이 없을 경우 자동 수집
+# ✅ 새로고침 후 상태 초기화
+if st.session_state.refresh_triggered:
+    st.session_state.refresh_triggered = False
+
+# 🔁 기존 로직 유지
 if not os.path.exists(DATA_FILE):
     with st.spinner("데이터 수집 중..."):
         run_all()
