@@ -6,8 +6,7 @@ import matplotlib.font_manager as fm
 import os
 from assemble_github import run_all, clean_sheet_name  # 사용자 정의 함수
 
-# ✅ 한글 폰트 설정 (Windows 기준)
-# 시스템 한글 폰트 자동 적용
+# ✅ 한글 폰트 설정 (Cloud 환경 대비)
 font_paths = fm.findSystemFonts(fontpaths=["/usr/share/fonts", "/usr/local/share/fonts"])
 han_fonts = [f for f in font_paths if 'Nanum' in f or 'Un' in f]
 
@@ -21,35 +20,43 @@ if han_fonts:
 st.set_page_config(page_title="경제지표 시각화 대시보드", layout="wide")
 st.title("📊 통합 경제지표 시각화 대시보드")
 
-# 🔄 데이터 로딩
+# 🔄 데이터 파일명
 DATA_FILE = "통합_주요지표_최종.xlsx"
 
 # ✅ 상태 변수 초기화
 if "refresh_triggered" not in st.session_state:
     st.session_state.refresh_triggered = False
 
-# ✅ 사용자 수동 수집 버튼
+# ✅ rerun 상태 변수
+if "__rerun__" not in st.session_state:
+    st.session_state["__rerun__"] = False
+
+# ✅ rerun 실행 함수
+def rerun_app():
+    st.session_state["__rerun__"] = True
+
+# ✅ 새로고침 트리거 처리
+if st.session_state["__rerun__"]:
+    st.session_state["__rerun__"] = False
+    st.experimental_rerun()
+
+# ✅ 수동 수집 버튼
 st.markdown("### 📂 통계 데이터 최신화")
-
 if st.button("🌀 최신 통계 데이터 새로 수집"):
-    if os.path.exists(DATA_FILE):
-        os.remove(DATA_FILE)
-    run_all()
-    
-    # 파일 존재 여부 확인 후 rerun
-    if os.path.exists(DATA_FILE):
-        st.session_state.refresh_triggered = True
-        st.experimental_rerun()
-    else:
-        st.error("데이터 파일 생성에 실패했습니다. run_all() 함수 확인 필요.")
+    with st.spinner("🛠 데이터 수집 중입니다..."):
+        if os.path.exists(DATA_FILE):
+            os.remove(DATA_FILE)
+        run_all()
 
-# ✅ 새로고침 후 상태 초기화
-if st.session_state.refresh_triggered:
-    st.session_state.refresh_triggered = False
+        # 수집 후 파일 존재 여부 확인
+        if os.path.exists(DATA_FILE):
+            rerun_app()
+        else:
+            st.error("❗ 데이터 파일이 생성되지 않았습니다. run_all() 함수 확인이 필요합니다.")
 
-# 🔁 기존 로직 유지
+# ✅ 앱 최초 로딩 시 데이터 수집
 if not os.path.exists(DATA_FILE):
-    with st.spinner("데이터 수집 중..."):
+    with st.spinner("🔄 초기 데이터 수집 중..."):
         run_all()
 
 # 📥 엑셀 파일 읽기
@@ -70,7 +77,7 @@ date_col = next((col for col in date_col_candidates if col in df.columns), None)
 value_col = next((col for col in value_col_candidates if col in df.columns), None)
 item_col = next((col for col in item_col_candidates if col in df.columns), None)
 
-# ✅ 날짜 변환 함수
+# ✅ 날짜 파싱 함수
 def parse_date(val):
     val = str(val).strip()
     if 'Q' in val:
@@ -87,7 +94,7 @@ def parse_date(val):
             continue
     return pd.NaT
 
-# ✅ 시계열 처리
+# ✅ 시계열 처리 및 시각화
 if date_col and value_col:
     df[date_col] = df[date_col].apply(parse_date)
     df[value_col] = (
@@ -107,7 +114,7 @@ if date_col and value_col:
     else:
         filtered_df = df.copy()
 
-    # ✅ 필터 후 유효성 검사
+    # ✅ 유효 데이터 검사
     if filtered_df[date_col].notna().sum() == 0 or filtered_df[value_col].notna().sum() == 0:
         st.warning("📭 선택된 조건에 해당하는 유효한 데이터가 없습니다.")
     else:
@@ -125,10 +132,11 @@ if date_col and value_col:
         ax.set_ylabel("값")
         st.pyplot(fig)
 
-    # ✅ 디버깅용 데이터 확인
+    # ✅ 원시 데이터 확인
     with st.expander("🔍 원시 데이터 확인"):
         st.write("Null 값 요약:")
         st.write(filtered_df[[date_col, value_col]].isna().sum())
         st.dataframe(filtered_df.head(10))
 else:
     st.warning("⚠️ 시계열 그래프를 생성할 수 있는 필수 컬럼이 없습니다.")
+
