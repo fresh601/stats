@@ -35,8 +35,13 @@ if st.button("🌀 최신 통계 데이터 새로 수집"):
     if os.path.exists(DATA_FILE):
         os.remove(DATA_FILE)
     run_all()
-    st.session_state.refresh_triggered = True
-    st.experimental_rerun()  # ✅ 버튼 내부에서만 호출해야 함
+    
+    # 파일 존재 여부 확인 후 rerun
+    if os.path.exists(DATA_FILE):
+        st.session_state.refresh_triggered = True
+        st.experimental_rerun()
+    else:
+        st.error("데이터 파일 생성에 실패했습니다. run_all() 함수 확인 필요.")
 
 # ✅ 새로고침 후 상태 초기화
 if st.session_state.refresh_triggered:
