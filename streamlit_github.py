@@ -23,6 +23,17 @@ st.title("📊 통합 경제지표 시각화 대시보드")
 
 # 🔄 데이터 로딩
 DATA_FILE = "통합_주요지표_최종.xlsx"
+
+st.markdown("### 📂 데이터 파일 확인 및 재수집")
+
+# 🌀 수동으로 데이터 수집 버튼
+if st.button("🌀 최신 통계 데이터 새로 불러오기"):
+    if os.path.exists(DATA_FILE):
+        os.remove(DATA_FILE)
+    run_all()
+    st.experimental_rerun()  # 앱 강제 새로고침
+
+# 📥 엑셀 파일이 없을 경우 자동 수집
 if not os.path.exists(DATA_FILE):
     with st.spinner("데이터 수집 중..."):
         run_all()
