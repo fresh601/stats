@@ -7,8 +7,7 @@ import os
 from assemble_github import run_all, clean_sheet_name  # 사용자 정의 함수
 
 # ✅ 한글 폰트 설정 (Cloud 환경 대비)
-# ✅ 스트림릿 클라우드 대응: 한글 폰트 강제 설정
-FONT_URL = "https://github.com/naver/nanumfont/blob/master/ttf/NanumGothic.ttf?raw=true"
+FONT_URL = "https://github.com/team-report/fonts/raw/main/NanumGothic.ttf"
 FONT_PATH = "/tmp/NanumGothic.ttf"
 
 if not os.path.exists(FONT_PATH):
