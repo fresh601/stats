@@ -3,10 +3,17 @@ import pandas as pd
 import re
 from datetime import datetime
 
-# 🔑 API 키 설정 (사용자 발급 키 입력 필요)
-ECOS_API_KEY = "YOUR_ECOS_KEY"
-INDEX_API_KEY = "YOUR_INDEX_KEY"
-KOSIS_API_KEY = "YOUR_KOSIS_KEY"
+# === API 키 (Streamlit secrets 사용 권장) ===
+try:
+    import streamlit as st
+    ECOS_API_KEY = st.secrets["api"]["ECOS_API_KEY"]
+    INDEX_API_KEY = st.secrets["api"]["INDEX_API_KEY"]
+    KOSIS_API_KEY = st.secrets["api"]["KOSIS_API_KEY"]
+except Exception:
+    # 테스트용: 직접 문자열 입력도 가능
+    ECOS_API_KEY = "YOUR_ECOS_KEY"
+    INDEX_API_KEY = "YOUR_INDEX_KEY"
+    KOSIS_API_KEY = "YOUR_KOSIS_KEY"
 
 # === 날짜 계산 유틸 ===
 def get_current_quarter():
@@ -26,12 +33,11 @@ def get_auto_period(years_back=3):
     start_date = now.replace(year=now.year - years_back)
     start_quarter = get_quarter_from_date(start_date)
     start_month = get_month_str(start_date)
-
     end_quarter = get_current_quarter()
     end_month = get_month_str(now)
     return start_quarter, end_quarter, start_month, end_month
 
-# === ECOS ===
+# === ECOS 데이터 ===
 def fetch_ecos_data():
     start_q, end_q, start_m, end_m = get_auto_period(3)
     config = [
@@ -74,7 +80,7 @@ def fetch_ecos_data():
         print(f"[ECOS 완료] {c['title']} {len(df)}건")
     return result
 
-# === INDEX ===
+# === INDEX 데이터 ===
 def fetch_index_go_data():
     config = [
         {"title": "국내총생산 및 경제성장률", "ix_code": "2736", "stats_code": "273601", "period": "202401:202412"},
@@ -110,7 +116,7 @@ def fetch_index_go_data():
         print(f"[INDEX 완료] {c['title']} {len(df)}건")
     return result
 
-# === KOSIS ===
+# === KOSIS 데이터 ===
 def fetch_kosis_data():
     url = f"https://kosis.kr/openapi/Param/statisticsParameterData.do?method=getList&apiKey={KOSIS_API_KEY}&itmId=T02+T03+T04+&objL1=0+1+2+4+3+&format=json&jsonVD=Y&prdSe=M&newEstPrdCnt=12&orgId=101&tblId=DT_1J22042"
     result = {}
@@ -128,7 +134,7 @@ def fetch_kosis_data():
         "통계명": item.get("TBL_NM", ""),
         "지수종류": item.get("C1_NM", ""),
         "항목": item.get("ITM_NM", ""),
-        "날짜": item.get("PRD_DE") or item.get("LST_CHN_DE", ""),  # 두 필드 병합
+        "날짜": item.get("PRD_DE") or item.get("LST_CHN_DE", ""),
         "단위": item.get("UNIT_NM", ""),
         "값": item.get("DT", "")
     } for item in items])
@@ -137,27 +143,34 @@ def fetch_kosis_data():
     print(f"[KOSIS 완료] {title} {len(df)}건")
     return result
 
-# === 엑셀 저장 ===
+# === 공통 유틸 ===
 def clean_sheet_name(name):
     return re.sub(r"[:\\/*?\[\]]", "", name)[:31]
 
-def save_to_excel(data_frames: dict, filename="통합_주요지표_최종.xlsx"):
+def save_to_excel(data_frames: dict, filename=None):
+    if filename is None:
+        filename = "/tmp/통합_주요지표_최종.xlsx"  # Cloud 대응
     if not data_frames:
-        print("⚠️ 저장할 데이터가 없습니다.")
-        return
+        print("⚠️ 저장할 데이터가 없습니다. (API 결과 없음)")
+        return None
     with pd.ExcelWriter(filename, engine="openpyxl") as writer:
         for title, df in data_frames.items():
             df.to_excel(writer, sheet_name=clean_sheet_name(title), index=False)
-            print(f"[엑셀 저장 완료] {title}")
+            print(f"[엑셀 저장 완료] {title} ({len(df)} rows)")
     print(f"✅ 모든 데이터 저장 완료 → {filename}")
+    return filename
 
-# === 실행 ===
+# === 실행 함수 ===
 def run_all():
     all_data = {}
     all_data.update(fetch_ecos_data())
     all_data.update(fetch_index_go_data())
     all_data.update(fetch_kosis_data())
-    save_to_excel(all_data)
+    if not all_data:
+        print("❌ run_all() 결과가 비었습니다. API 키/데이터 확인 필요.")
+        return None
+    return save_to_excel(all_data)
 
+# 테스트 실행
 if __name__ == "__main__":
     run_all()
