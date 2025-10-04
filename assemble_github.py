@@ -10,7 +10,7 @@ try:
     INDEX_API_KEY = st.secrets["api"]["INDEX_API_KEY"]
     KOSIS_API_KEY = st.secrets["api"]["KOSIS_API_KEY"]
 except Exception:
-    # 테스트용: 직접 문자열 입력도 가능
+    # 테스트용: 직접 문자열 입력 가능
     ECOS_API_KEY = "YOUR_ECOS_KEY"
     INDEX_API_KEY = "YOUR_INDEX_KEY"
     KOSIS_API_KEY = "YOUR_KOSIS_KEY"
@@ -147,9 +147,7 @@ def fetch_kosis_data():
 def clean_sheet_name(name):
     return re.sub(r"[:\\/*?\[\]]", "", name)[:31]
 
-def save_to_excel(data_frames: dict, filename=None):
-    if filename is None:
-        filename = "/tmp/통합_주요지표_최종.xlsx"  # Cloud 대응
+def save_to_excel(data_frames: dict, filename="통합_주요지표_최종.xlsx"):
     if not data_frames:
         print("⚠️ 저장할 데이터가 없습니다. (API 결과 없음)")
         return None
@@ -171,6 +169,5 @@ def run_all():
         return None
     return save_to_excel(all_data)
 
-# 테스트 실행
 if __name__ == "__main__":
     run_all()
