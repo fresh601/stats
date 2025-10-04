@@ -44,6 +44,15 @@ def fetch_ecos_data():
         {"title": "실질GDP", "stat_code": "200Y106", "period": "Q", "start": start_q, "end": end_q, "item_code1": "1400", "item_code2": None},
         {"title": "명목GDP", "stat_code": "200Y105", "period": "Q", "start": start_q, "end": end_q, "item_code1": "1400", "item_code2": None},
         {"title": "소비자물가지수", "stat_code": "901Y009", "period": "M", "start": start_m, "end": end_m, "item_code1": "0", "item_code2": None},
+        {"title": "생산자물가지수(기본분류)", "stat_code": "404Y014", "period": "M", "start": start_m, "end": end_m, "item_code1": "*AA", "item_code2": None},
+        {"title": "수출물가지수(기본분류)", "stat_code": "402Y014", "period": "M", "start": start_m, "end": end_m, "item_code1": "*AA", "item_code2": "W"},
+        {"title": "수입물가지수(기본분류)", "stat_code": "401Y015", "period": "M", "start": start_m, "end": end_m, "item_code1": "*AA", "item_code2": "W"},
+        {"title": "환율(달러)", "stat_code": "731Y006", "period": "M", "start": start_m, "end": end_m, "item_code1": "0000002", "item_code2": "0000100"},
+        {"title": "환율(위안)", "stat_code": "731Y006", "period": "M", "start": start_m, "end": end_m, "item_code1": "0000007", "item_code2": "0000100"},
+        {"title": "환율(엔화)", "stat_code": "731Y006", "period": "M", "start": start_m, "end": end_m, "item_code1": "0000006", "item_code2": "0000100"},
+        {"title": "선행종합지수", "stat_code": "901Y067", "period": "M", "start": start_m, "end": end_m, "item_code1": "I16A", "item_code2": None},
+        {"title": "동행종합지수", "stat_code": "901Y067", "period": "M", "start": start_m, "end": end_m, "item_code1": "I16B", "item_code2": None},
+        {"title": "후행종합지수", "stat_code": "901Y067", "period": "M", "start": start_m, "end": end_m, "item_code1": "I16C", "item_code2": None},
     ]
     result = {}
     for c in config:
@@ -56,12 +65,10 @@ def fetch_ecos_data():
             response.raise_for_status()
             items = response.json().get("StatisticSearch", {}).get("row", [])
         except Exception as e:
-            print(f"[ECOS 오류] {c['title']} 요청 실패 → {e}")
-            print("ECOS URL:", url)
+            print(f"[ECOS 오류] {c['title']} → {e}")
             continue
         if not items:
             print(f"[ECOS 경고] {c['title']} 데이터 없음")
-            print("ECOS URL:", url)
             continue
         df = pd.DataFrame([{
             "항목명": item.get("ITEM_NAME1", ""),
@@ -95,15 +102,10 @@ def fetch_index_go_data():
             items = response.json()
         except Exception as e:
             print(f"[INDEX 오류] {c['title']} 요청 실패 → {e}")
-            print("INDEX URL:", response.url if 'response' in locals() else url)
-            return result
-
+            continue
         if not items:
             print(f"[INDEX 경고] {c['title']} 데이터 없음")
-            print("INDEX URL:", response.url)
-            print("INDEX 응답:", response.text[:200])
             continue
-
         df = pd.DataFrame([{
             "항목이름": item.get("항목이름", ""),
             "시점": item.get("시점", ""),
@@ -124,15 +126,10 @@ def fetch_kosis_data():
         items = response.json()
     except Exception as e:
         print(f"[KOSIS 오류] 요청 실패 → {e}")
-        print("KOSIS URL:", response.url if 'response' in locals() else url)
         return result
-
     if not items:
         print("[KOSIS 경고] 데이터 없음")
-        print("KOSIS URL:", response.url)
-        print("KOSIS 응답:", response.text[:200])
         return result
-
     df = pd.DataFrame([{
         "통계명": item.get("TBL_NM", ""),
         "지수종류": item.get("C1_NM", ""),
@@ -146,7 +143,7 @@ def fetch_kosis_data():
     print(f"[KOSIS 완료] {title} {len(df)}건")
     return result
 
-# === 유틸 ===
+# === 공통 유틸 ===
 def clean_sheet_name(name):
     return re.sub(r"[:\\/*?\[\]]", "", name)[:31]
 
@@ -161,6 +158,7 @@ def save_to_excel(data_frames: dict, filename="통합_주요지표_최종.xlsx")
     print(f"✅ 모든 데이터 저장 완료 → {filename}")
     return filename
 
+# === 실행 함수 ===
 def run_all():
     all_data = {}
     all_data.update(fetch_ecos_data())
